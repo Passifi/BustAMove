@@ -1,0 +1,176 @@
+#include <memory>
+#include <windows.h>
+#include <wingdi.h>
+#include <winnt.h>
+#include <winuser.h>
+#include <vector>
+#include <random>
+#include "shapes.h"
+//#include "gamelogic.h"
+#include <iostream>
+#include "renderer.h"
+#include "shapes.h"
+#include "gameMath.h"
+#include "input.h"
+#include "gamelogic.h"
+RECT windowRect;
+const int playfieldWidth = 10;
+const int playfieldMaxHeight = 30;
+
+DisplayInfo dispInfo;
+//Playfield playfield(8,20);
+
+    bool running = true;
+std::vector<std::uint32_t> colors {
+    0xee0110,
+    0x00ea00,
+    0x0000a3,
+    0xf0af00,
+    0x333333,
+    0xae00ee,
+    0xe0ffa1,
+    0x00ea0a,
+};
+
+GameHandler gameHandler;
+void pressed_a() {
+    std::cout<< "A" << std::endl;
+}
+
+Renderer *render = nullptr;
+Vector2D position(100.0f,100.0f);
+
+GraphicsFactory graphicFactory;
+void setBubble() {
+{
+               int x = (int)(position.x / 20)*20;
+               int y = (int)(position.y / 20)*20;
+                   GraphicProperties props {
+                    (float)x,
+                    (float)y,
+                    20,
+                    20,
+                    1.0,
+                    false,
+                    D2D1::ColorF(0.3f,0.8f,0.2f)
+                };
+                gameHandler.addGameobjectAt( position);         
+    }
+
+}
+
+int refreshSpeed = 100;
+LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+int createWindow(HWND hwnd, HINSTANCE hInstance,LPSTR szAppName, int iCmdShow);
+void handleInputDown(int keycode);
+InputHandler inputs;
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow) {
+    static TCHAR szAppName[] = TEXT ("HelloWin");
+    HWND hwnd;
+    int result = createWindow(hwnd, hInstance, szAppName,  iCmdShow);
+    MSG msg;
+    inputs.registerAction("A", setBubble);
+    while(running) { 
+    while(PeekMessage(&msg, NULL,0,0,PM_REMOVE)) {
+        
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+        }
+        render->render();
+    }
+    delete render;
+    return msg.wParam;
+}
+
+LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    HDC hdc;
+    PAINTSTRUCT ps;
+    RECT rect;
+
+    switch(message) 
+    {
+            case WM_CREATE:
+                GetClientRect(hwnd,  &windowRect);
+                render = new Renderer(hwnd); 
+                render->intialize();
+                { 
+                    graphicFactory.rTarget = render->getRenderTarget();
+                    GraphicProperties props {
+                    100,
+                    0,
+                    20,
+                    20,
+                    1.0,
+                    false,
+                    D2D1::ColorF(0.3f,0.8f,0.2f)
+
+                };
+                    props.x = 100;
+                    props.y = 0;
+                    props.width = 20;
+                    props.height = 20;
+                    props.changed = false;
+                    gameHandler.factory = &graphicFactory; 
+                    gameHandler.mainRender = render;
+                    gameHandler.addGameobject();
+
+                    gameHandler.addGameobject(); 
+                    //Graphic * g= graphicFactory.createGraphic(SphereGrapic,props);
+                    
+                    //render->addRenderObject(graphicFactory.createGraphic(SphereGrapic, props));
+                    }
+                
+                return 0;
+            case WM_TIMER:
+                return 0; 
+                break; 
+            case WM_PAINT:
+                ValidateRect(hwnd, NULL ); 
+            return 0;
+            case WM_KEYDOWN:
+                inputs.executeAction((int)wParam); 
+            //position new bubbles 
+            
+            return 0; 
+            case WM_MOUSEMOVE: {  
+                int kx = lParam & 0xffff;
+                int ky = (0xffff0000 & lParam) >> 16;
+                position = {(float)kx,(float)ky}; 
+                }                
+                return 0; 
+            case WM_LBUTTONDOWN:
+                return 0;
+            case WM_DESTROY:
+                running = false; 
+                PostQuitMessage(0);
+                return 0;
+    }
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+int createWindow(HWND hwnd, HINSTANCE hInstance,LPSTR szAppName, int iCmdShow) {
+ WNDCLASS wndclass;
+    wndclass.style = CS_HREDRAW | CS_VREDRAW;
+    wndclass.lpfnWndProc = WndProc;
+    wndclass.cbClsExtra = 0;
+    wndclass.cbWndExtra = 0;
+    wndclass.hInstance = hInstance;
+    wndclass.hIcon = LoadIcon(NULL,IDI_APPLICATION);
+    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wndclass.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
+    wndclass.lpszMenuName = NULL;
+    wndclass.lpszClassName = szAppName;
+    if(!RegisterClass(&wndclass)) {
+        MessageBox(NULL,TEXT("This program requirres Windows NT!"), szAppName, MB_ICONERROR);
+        return 1;
+    }
+    hwnd = CreateWindow(szAppName, TEXT("The Hello Program"), WS_OVERLAPPEDWINDOW,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,NULL,hInstance,NULL);
+    ShowWindow(hwnd, iCmdShow);
+    UpdateWindow(hwnd);
+    return 0;
+}
+
+void handleInputDown(int keycode) {
+    switch(keycode) {
+    }
+}
+

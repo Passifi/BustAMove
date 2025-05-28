@@ -1,0 +1,15 @@
+busta.exe: main.o shapes.o render.o gamemath.o
+	g++ -g main.o render.o shapes.o gamemath.o -o busta.exe -lgdi32 -luser32 -lkernel32 -lshell32 -lcomctl32 -lole32 -ld2d1	
+	
+	
+main.o: main.cpp
+	g++ -c main.cpp -o main.o  
+
+shapes.o: shapes.cpp 
+	g++ -c shapes.cpp -o shapes.o
+
+render.o: renderer.cpp 
+	g++ -c renderer.cpp -o render.o
+
+gamemath.o: gameMath.cpp
+	g++ -c gameMath.cpp -o gamemath.o
