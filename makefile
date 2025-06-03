@@ -16,7 +16,7 @@ SRC_DIR     := src
 OBJ_DIR     := obj
 BIN_DIR     := bin
 INCLUDE_DIR := include
-
+TEST_DIR := tests
 # Add include directory to compiler flags
 CXXFLAGS += -I$(INCLUDE_DIR)
 
@@ -27,24 +27,28 @@ CXXFLAGS += -I$(INCLUDE_DIR)
 # $(wildcard pattern) searches for files matching pattern
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
 
+TEST_SPEC_SOURCES := $(wildcard $(TEST_DIR))/test*
+TEST_IMPL_SOURCES := $(TEST_DIR)/$(TEST_DIR)/catch_amalgamated.cpp $(SRC_DIR)/gameMath.cpp
 # Generate object file names from source file names
 # $(patsubst pattern,replacement,text)
 # Example: src/main.cpp -> obj/main.o
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
-
+TEST_OBJECTS := $(patsubst $(TEST_DIR)/%.cpp,$(OBJ_DIR)/test_%.o,$(TEST_SPEC_SOURCES)) \
+                $(patsubst $(TEST_DIR)/%.cpp,$(OBJ_DIR)/test_impl_%.o,$(filter %catch_amalgamated.cpp,$(TEST_IMPL_SOURCES))) \
+                $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/lib_%.o,$(filter %my_lib.cpp,$(TEST_IMPL_SOURCES)))
 # Generate dependency file names (for header dependencies)
 # Example: obj/main.o -> obj/main.d
 DEP_FILES := $(OBJ_FILES:.o=.d)
 
 # Full path to the executable
 EXECUTABLE := $(BIN_DIR)/$(TARGET_EXEC)
-
+TEST_TARGET := $(BIN_DIR)/run_tests.exe
 # -----------------------------------------------------------------------------
 # Main Targets
 # -----------------------------------------------------------------------------
 .PHONY: all clean fclean re
 
-all: $(EXECUTABLE)
+all: $(EXECUTABLE) #$(TEST_TARGET)
 
 # -----------------------------------------------------------------------------
 # Linking Rule: Create the executable from object files

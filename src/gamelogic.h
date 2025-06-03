@@ -5,6 +5,7 @@
 #include "shapes.h"
 #include <unordered_set>
 #include <queue>
+#include "transform.h"
 // collisionDetection
 // Playfield 
 //
@@ -14,7 +15,7 @@
 class CollisionShape {
 public:
     CollisionShape();
-    float x,y;
+    Transform2D* transform = nullptr;
     std::string name;
     virtual bool intersects(CollisionShape& other) = 0;
     //void updatePosition(Vector2D newPosition);
@@ -23,7 +24,6 @@ public:
 class RectCollisionShape : public CollisionShape{
     public: 
         RectCollisionShape(); 
-        float width,height;
         
         bool intersects(CollisionShape& other) override; 
 };
@@ -44,10 +44,14 @@ class GameObject {
 public:    
     GameObject();
     GameObject(Vector2D pos);
-    Vector2D  position{0.f,0.f}; 
+    
+    Transform2D* transform;
+    Vector2D velocity{0.0f,0.0f}; // should be part of a physics class (like rigid body) for final engine,so don'lt couple to heavily  
     Graphic* graphic = nullptr;
     Collider* collider = new Collider();
     void move(Vector2D offset); 
+    void applyVelocity();
+     
 };
 
 class GameObjectFactory {
@@ -61,7 +65,8 @@ public:
     GraphicsFactory *factory = nullptr;
     std::vector<GameObject> gameObjects; 
     void addGameobject(/*blueprint here*/);
-    void addGameobjectAt(Vector2D position); 
+    GameObject* addGameobjectAt(Vector2D position); 
+    void addArrow();  
     void updateObjects();
 
 };

@@ -13,12 +13,13 @@
 #include "gameMath.h"
 #include "input.h"
 #include "gamelogic.h"
+#include "transform.h"
+#define PI 3.14159265358979323846
 RECT windowRect;
 const int playfieldWidth = 10;
 const int playfieldMaxHeight = 30;
-
+const float bubbleSpeed = 4.0f;
 DisplayInfo dispInfo;
-//Playfield playfield(8,20);
 
     bool running = true;
 std::vector<std::uint32_t> colors {
@@ -39,8 +40,8 @@ void pressed_a() {
 
 Renderer *render = nullptr;
 Vector2D position(100.0f,100.0f);
-
 GraphicsFactory graphicFactory;
+GameObject *playerArrow = nullptr;
 void setBubble() {
 {
                int x = (int)(position.x / 20)*20;
@@ -54,29 +55,49 @@ void setBubble() {
                     false,
                     D2D1::ColorF(0.3f,0.8f,0.2f)
                 };
-                gameHandler.addGameobjectAt( position);         
+                gameHandler.addGameobjectAt( {(float)x,(float)y});         
     }
-
 }
 
-int refreshSpeed = 100;
+void shotBubble() {
+                    float x = 600.0f;
+                    float y = 400.0f;
+                   GraphicProperties props {
+                    (float)x,
+                    (float)y,
+                    20,
+                    20,
+                    1.0,
+                    false,
+                    D2D1::ColorF(0.3f,0.8f,0.2f)
+
+                };
+               auto ob=  gameHandler.addGameobjectAt( {(float)x,(float)y});         
+                auto base = Vector2D(600.f,400.f); 
+                auto res = position - base;
+                res.normalize();
+                ob->velocity= res*bubbleSpeed;
+}
+
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-int createWindow(HWND hwnd, HINSTANCE hInstance,LPSTR szAppName, int iCmdShow);
-void handleInputDown(int keycode);
+int createWindow(HINSTANCE hInstance,LPSTR szAppName, int iCmdShow);
 InputHandler inputs;
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow) {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE , LPSTR lpCmdLine, int iCmdShow) {
     static TCHAR szAppName[] = TEXT ("HelloWin");
-    HWND hwnd;
-    int result = createWindow(hwnd, hInstance, szAppName,  iCmdShow);
+    int result = createWindow( hInstance, szAppName,  iCmdShow);
+    if(result != 0) 
+    {
+        std::cout << "Couldn't intiliaze window, aborting" << std::endl;
+    }
     MSG msg;
     inputs.registerAction("A", setBubble);
     while(running) { 
-    while(PeekMessage(&msg, NULL,0,0,PM_REMOVE)) {
-        
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-        }
-        render->render();
+        while(PeekMessage(&msg, NULL,0,0,PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+            }
+            gameHandler.updateObjects();
+            render->render();
     }
     delete render;
     return msg.wParam;
@@ -95,50 +116,35 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 render->intialize();
                 { 
                     graphicFactory.rTarget = render->getRenderTarget();
-                    GraphicProperties props {
-                    100,
-                    0,
-                    20,
-                    20,
-                    1.0,
-                    false,
-                    D2D1::ColorF(0.3f,0.8f,0.2f)
-
-                };
-                    props.x = 100;
-                    props.y = 0;
-                    props.width = 20;
-                    props.height = 20;
-                    props.changed = false;
+                    graphicFactory.factory = render->getFactory();
                     gameHandler.factory = &graphicFactory; 
                     gameHandler.mainRender = render;
                     gameHandler.addGameobject();
-
-                    gameHandler.addGameobject(); 
-                    //Graphic * g= graphicFactory.createGraphic(SphereGrapic,props);
-                    
-                    //render->addRenderObject(graphicFactory.createGraphic(SphereGrapic, props));
-                    }
-                
+                    gameHandler.addArrow();  
+                    playerArrow = &gameHandler.gameObjects.back();
+                }
                 return 0;
             case WM_TIMER:
                 return 0; 
                 break; 
             case WM_PAINT:
                 ValidateRect(hwnd, NULL ); 
-            return 0;
+                return 0;
             case WM_KEYDOWN:
                 inputs.executeAction((int)wParam); 
-            //position new bubbles 
-            
-            return 0; 
+                return 0; 
             case WM_MOUSEMOVE: {  
-                int kx = lParam & 0xffff;
-                int ky = (0xffff0000 & lParam) >> 16;
-                position = {(float)kx,(float)ky}; 
+                    int kx = lParam & 0xffff;
+                    int ky = (0xffff0000 & lParam) >> 16;
+                    position = {(float)kx,(float)ky};
+                    auto arrowBase= Vector2D{600.0f,400.0f};
+                    auto degTarget = arrowBase - position;
+                    playerArrow->transform->setRotation(-atan2(degTarget.x,degTarget.y)*(180/PI));
+                    gameHandler.gameObjects[0].transform->setPosition( {(float)kx,(float)ky});
                 }                
                 return 0; 
             case WM_LBUTTONDOWN:
+                shotBubble(); 
                 return 0;
             case WM_DESTROY:
                 running = false; 
@@ -147,8 +153,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
-int createWindow(HWND hwnd, HINSTANCE hInstance,LPSTR szAppName, int iCmdShow) {
- WNDCLASS wndclass;
+int createWindow(HINSTANCE hInstance,LPSTR szAppName, int iCmdShow) {
+    HWND hwnd;
+    WNDCLASS wndclass;
     wndclass.style = CS_HREDRAW | CS_VREDRAW;
     wndclass.lpfnWndProc = WndProc;
     wndclass.cbClsExtra = 0;
@@ -169,8 +176,5 @@ int createWindow(HWND hwnd, HINSTANCE hInstance,LPSTR szAppName, int iCmdShow) {
     return 0;
 }
 
-void handleInputDown(int keycode) {
-    switch(keycode) {
-    }
-}
+
 

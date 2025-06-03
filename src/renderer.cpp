@@ -21,7 +21,6 @@ Renderer::~Renderer() {
     std::cout << "Cleanup" << std::endl; 
     if(factory != nullptr) 
         factory->Release();
-    
     if(rTarget != nullptr) 
         rTarget->Release();
     for(auto& el : graphics) {
@@ -31,7 +30,6 @@ Renderer::~Renderer() {
 
 
 void initGraphicProperties(GraphicProperties& properties) {
-    
     properties.x = 0;
     properties.y = 0;
     properties.width = 0;
@@ -41,12 +39,10 @@ void initGraphicProperties(GraphicProperties& properties) {
     properties.color = D2D1::ColorF(1.0,1.0,1.0);
 }
 
-Graphic::Graphic(float x, float y, float width, float height) : x(x), y(y), width(width), height(height) {}; 
-Graphic::Graphic() : x(0), y(0), width(0), height(0) {};
+Graphic::Graphic(Transform2D* transform): transform(transform){}; 
+Graphic::Graphic() : transform(nullptr) {};
 
 void Graphic::updatePosition(Vector2D &newPosition) {
-    this->x = newPosition.x;
-    this->y = newPosition.y;
     this->updateShape = true;    
 }
 
@@ -63,18 +59,29 @@ void calculateDisplayinfo(DisplayInfo& info, RECT windowRect, int playfieldWidth
 }
 
 void Circle::draw(ID2D1HwndRenderTarget* rTarget)  {
-    if(updateShape) { 
-    this->ellipse = D2D1::Ellipse(Point2F(this->x,this->y),this->width  ,  this->height); 
-    updateShape = false; }
+    
     rTarget->DrawEllipse(this->ellipse,this->brush,1.0f);
     if(this->filled) 
     rTarget->FillEllipse(this->ellipse,this->brush);
 }
 
-Circle::Circle(float x, float y, float width, float height) : Graphic(x,y,width,height) {
-        ellipse = D2D1::Ellipse(Point2F(x,y), width,height);
-}; 
+Circle::Circle(Transform2D* transform) : Graphic(transform) {
+        ellipse = D2D1::Ellipse(Point2F(0.f,0.f), transform->dimension.x ,transform->dimension.y);
+};
+
+Arrow::Arrow(Transform2D* transform) : Graphic(transform) {
+
+};
+
+
   
+void Arrow::draw(ID2D1HwndRenderTarget* rTarget) {
+   
+    rTarget->DrawGeometry(shape,  brush);
+    
+    // update shape 
+
+}
 
 Graphic* GraphicsFactory::createGraphic(GraphicType type,const GraphicProperties& properties) {
     if(rTarget == nullptr) {
@@ -90,18 +97,46 @@ Graphic* GraphicsFactory::createGraphic(GraphicType type,const GraphicProperties
                     //maybe instead fallback on default brush, would depend on the type of error tho
                     return nullptr;
                 }
-
-                Graphic* g = new Circle(properties.x,properties.y,properties.width,properties.height);
+                
+                Graphic* g = new Circle(properties.transPtr);
                 g->brush = brush;
                 return g;
+            }
+        case Arrow:
+            {
+                ID2D1SolidColorBrush *brush;
+                ID2D1PathGeometry *path;
+                HRESULT hr = rTarget->CreateSolidColorBrush(properties.color,&brush); 
+                hr = factory->CreatePathGeometry(&path); 
+                
+                if(SUCCEEDED(hr)) {
+                    
+                    ID2D1GeometrySink *pSink = nullptr;
+                    hr = path->Open(&pSink);
+                        pSink->BeginFigure(D2D1::Point2F(20.f,0),D2D1_FIGURE_BEGIN_FILLED);
+                        pSink->AddLine({40.f,50.f});
+                        pSink->AddLine({25.f,50.f});
+                        pSink->AddLine({25.f,120.f});
+                        pSink->AddLine({15.f,120.f});
+                        pSink->AddLine({15.f,50.f});
+                        pSink->AddLine({0.f,50.f});
+                        pSink->AddLine({20.f,0.f});
+                         pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+                        hr = pSink->Close();
+                    if(pSink != nullptr)
+                         free(pSink);
+                     
+                    class::Arrow * g = new class::Arrow(properties.transPtr);
+                    g->brush = brush; 
+                    g->shape = path; 
+                    return g; 
+                }
             }
         default:
             return nullptr;
     }
 }
 
-void Renderer::drawBoundaries(HDC hdc) {
-}
 
 void Renderer::drawGrid() {
     if(rTarget) {
@@ -119,7 +154,6 @@ void Renderer::drawGrid() {
 }
 
 void Renderer::intialize() {
-    std::cout << "Initializing Renderer" << std::endl;
    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED,&factory);
     createGraphicsResources();
 }
@@ -128,6 +162,10 @@ void Renderer::intialize() {
 ID2D1HwndRenderTarget* Renderer::getRenderTarget() {
 
     return this->rTarget;
+}
+
+ID2D1Factory * Renderer::getFactory() {
+    return this->factory;
 }
 
 HRESULT Renderer::createGraphicsResources() {
@@ -143,7 +181,6 @@ HRESULT Renderer::createGraphicsResources() {
                                             D2D1::HwndRenderTargetProperties(wHwnd,size),
                                             &rTarget); 
     }
-    // capture hr not being a success
     return hr;
 
 };
@@ -158,8 +195,6 @@ void Renderer::updateDisplay() {
             rc.right - rc.left, rc.bottom - rc.top
         );
         rTarget->Resize(size); 
-
-    // create new renderTarget or modify the old one? 
 }
     
 void Renderer::render() {
@@ -170,12 +205,18 @@ void Renderer::render() {
     rTarget->BeginDraw();
     rTarget->Clear(D2D1::ColorF(D2D1::ColorF::WhiteSmoke)); 
     drawGrid();
-    for(auto& el : graphics) {
+   for(auto& el : graphics) {
+        applyMatrices(el->transform);
         el->draw(rTarget);
+        rTarget->SetTransform(D2D1::Matrix3x2F::Identity());
     }
-     
     rTarget->EndDraw();
 }
+
+void Renderer::applyMatrices(Transform2D* transform) {
+
+    this->rTarget->SetTransform(transform->getTransform());
+};
 
 void Renderer::addRenderObject(Graphic* graphic) {
      

@@ -10,6 +10,7 @@
 #include <d2d1.h>
 #include <d2d1_1.h>
 #include "gameMath.h"
+#include "transform.h"
 // define constants here 
 //
 #define ToColorF(color) D2D1::ColorF(color.red/255,color.green/255,color.blue/255)  
@@ -28,32 +29,41 @@ void calculateDisplayinfo(DisplayInfo& info, RECT windowRect, int playfieldWidth
 class Graphic {
     
     public:
-        Graphic(float x, float y, float width, float height); 
+        Graphic(Transform2D* transform); 
         Graphic();
         virtual  ~Graphic() = default; 
         virtual void draw(ID2D1HwndRenderTarget* rTarget) = 0;
+         
         bool updateShape = false; 
         void updatePosition(Vector2D& newPosition); 
+        
+        void setColor(ID2D1Brush* brush);
         ID2D1Brush *brush;        
-        float x,y,width,height;
+        Transform2D* transform; 
         bool filled = true;
 };
 
 class Circle :public Graphic {
     public:
         D2D1_ELLIPSE ellipse;
-        Circle(float x, float y, float width, float height);         
+        Circle(Transform2D* transform);         
         void draw(ID2D1HwndRenderTarget* rTarget) override;
-        void setColor(ID2D1Brush* brush);
         
-}
-;
+};
+
+class Arrow: public Graphic {
+    public:
+        ID2D1PathGeometry *shape = nullptr;  
+        Arrow(Transform2D* tranform);
+        void draw(ID2D1HwndRenderTarget* rTarget) override;
+};
 
 struct GraphicProperties {
     
     float x,y, width, height,lineWidth;
     bool changed;
     D2D1::ColorF color;
+    Transform2D* transPtr;
 };
 
 void initGraphicProperties();
@@ -62,13 +72,13 @@ enum GraphicType {
     BitmapGraphic,
     RectGraphic,
     SphereGrapic,
+    Arrow,
 };
 class GraphicsFactory {
 public:
     ID2D1HwndRenderTarget *rTarget = nullptr;
-     
+    ID2D1Factory *factory = nullptr; 
     Graphic* createGraphic(GraphicType type,const GraphicProperties& properties);
-        
 };
 
 class Renderer {
@@ -87,8 +97,10 @@ class Renderer {
         void addRenderObject(Graphic* graphics);
         void removeObject();
         void drawGrid(); 
-        
+        ID2D1Factory* getFactory(); 
         ID2D1HwndRenderTarget* getRenderTarget(); 
+        void applyMatrices(Transform2D* transform);   
+            
     private:
         HWND wHwnd;
         ID2D1Factory* factory = nullptr;

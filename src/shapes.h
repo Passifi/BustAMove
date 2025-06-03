@@ -21,28 +21,4 @@ class Color {
     }
 private:
 };
-class Bubble {
-    public:
-    
-    Bubble(float x, float y, float width, float height) : x(x), y(y), width(width), height(height)
-    {
-        color = 0xff00ff00;
-
-
-    }
-    float x,y,width,height;
-        
-    uint32_t color;
-    Vector2D trajectory{0.0,0.0};  
-    
-    void setTrajectory(float x, float y);
-    void move(); 
-    bool collide(Bubble& other); 
-    void setCirclePtr(Circle* ptr); 
-    void setPosition(float x, float y);
-    Circle* circle = nullptr;     
-    private:
-
-
-};
 

@@ -19,18 +19,17 @@ public:
         return {this->x*constValue, this->y*constValue};
     }
      Vector2D& operator+=(Vector2D& other) {
-        
         this->x += other.x;
         this->y += other.y;
-
         return *this;
+    }
 
+    bool operator==(Vector2D& other) {
+        return this->x == other.x && this->y == other.y;
     }
 
      float magnitude() {
-        
         return sqrt(this->x*this->x + this->y * this->y);
-
     }
      void normalize() {
         
