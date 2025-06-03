@@ -32,19 +32,17 @@ class Collider {
     public: 
     CollisionShape* shape = nullptr;
     bool collision(Collider& other);
-    bool getCollisionStatus();
-    void resetCollisionStatus();
+    bool getCollisionStatus();   
     
 private:
     bool _hasCollided = false;
-};
+
 
 class Collisionhandler {
-    public:
+
     std::vector<Collider*> colliders;
 
     void addCollider(Collider* c);
-    void checkCollisions();
 };
 
 class GameObject {

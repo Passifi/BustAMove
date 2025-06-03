@@ -23,7 +23,23 @@ bool RectCollisionShape::intersects(CollisionShape& other) {
 }
 
 bool Collider::collision(Collider& collider) {
-    return collider.shape->intersects(*this->shape); 
+    
+    bool collided = collider.shape->intersects(*this->shape); 
+    this->_hasCollided = this->_hasCollided || collided;
+    //should there be a list of objects this collided with? 
+    return collided;
+
+}
+
+void Collisionhandler::checkCollisions() {
+// all collided objects are now marked, next 
+    for(auto it = this->colliders.begin(); it != this->colliders.end(); it++) {
+        for(auto cmp = it+1; cmp!= this->colliders.end(); cmp++)
+        {
+            (*it)->collision(**cmp);
+        }
+
+    };
 }
 GameObject* GameHandler::addGameobjectAt(Vector2D position) {
     GameObject obj;

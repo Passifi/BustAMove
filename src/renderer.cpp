@@ -18,7 +18,6 @@ Renderer::Renderer(HWND hwnd) : wHwnd(hwnd) {
             calculateDisplayinfo(dispInfo,windowRect,20);
         }
 Renderer::~Renderer() {
-    std::cout << "Cleanup" << std::endl; 
     if(factory != nullptr) 
         factory->Release();
     if(rTarget != nullptr) 
@@ -62,7 +61,7 @@ void Circle::draw(ID2D1HwndRenderTarget* rTarget)  {
     
     rTarget->DrawEllipse(this->ellipse,this->brush,1.0f);
     if(this->filled) 
-    rTarget->FillEllipse(this->ellipse,this->brush);
+        rTarget->FillEllipse(this->ellipse,this->brush);
 }
 
 Circle::Circle(Transform2D* transform) : Graphic(transform) {
@@ -78,8 +77,6 @@ Arrow::Arrow(Transform2D* transform) : Graphic(transform) {
 void Arrow::draw(ID2D1HwndRenderTarget* rTarget) {
    
     rTarget->DrawGeometry(shape,  brush);
-    
-    // update shape 
 
 }
 
@@ -205,7 +202,7 @@ void Renderer::render() {
     rTarget->BeginDraw();
     rTarget->Clear(D2D1::ColorF(D2D1::ColorF::WhiteSmoke)); 
     drawGrid();
-   for(auto& el : graphics) {
+    for(auto& el : graphics) {
         applyMatrices(el->transform);
         el->draw(rTarget);
         rTarget->SetTransform(D2D1::Matrix3x2F::Identity());
@@ -214,11 +211,9 @@ void Renderer::render() {
 }
 
 void Renderer::applyMatrices(Transform2D* transform) {
-
     this->rTarget->SetTransform(transform->getTransform());
 };
 
 void Renderer::addRenderObject(Graphic* graphic) {
-     
     graphics.push_back(graphic);
 }
