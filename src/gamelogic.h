@@ -27,12 +27,19 @@ class RectCollisionShape : public CollisionShape{
         
         bool intersects(CollisionShape& other) override; 
 };
+class CircleCollisionShape : public CollisionShape {
+    public:
+        CircleCollisionShape();
+        float radius = 20.0f;
+        bool intersects(CollisionShape& other) override;
+};
 class Collider {
     
     public: 
     CollisionShape* shape = nullptr;
     bool collision(Collider& other);
     bool getCollisionStatus();
+    void setCollisionStatus(bool newState);
     void resetCollisionStatus();
     
 private:
@@ -73,7 +80,7 @@ public:
     std::vector<GameObject> gameObjects; 
     void addGameobject(/*blueprint here*/);
     GameObject* addGameobjectAt(Vector2D position); 
-    void addArrow();  
+    GameObject* addArrow();  
     void updateObjects();
 
 };

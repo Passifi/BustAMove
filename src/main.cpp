@@ -20,7 +20,7 @@ const int playfieldWidth = 10;
 const int playfieldMaxHeight = 30;
 const float bubbleSpeed = 4.0f;
 DisplayInfo dispInfo;
-
+bool bubbleShot = false;
     bool running = true;
 std::vector<std::uint32_t> colors {
     0xee0110,
@@ -34,10 +34,7 @@ std::vector<std::uint32_t> colors {
 };
 
 GameHandler gameHandler;
-void pressed_a() {
-    std::cout<< "A" << std::endl;
-}
-
+Collisionhandler collisionHandler;
 Renderer *render = nullptr;
 Vector2D position(100.0f,100.0f);
 GraphicsFactory graphicFactory;
@@ -55,7 +52,9 @@ void setBubble() {
                     false,
                     D2D1::ColorF(0.3f,0.8f,0.2f)
                 };
-                gameHandler.addGameobjectAt( {(float)x,(float)y});         
+
+                GameObject* g = gameHandler.addGameobjectAt( {(float)x,(float)y});         
+                collisionHandler.addCollider(g->collider);         
     }
 }
 
@@ -77,6 +76,7 @@ void shotBubble() {
                 auto res = position - base;
                 res.normalize();
                 ob->velocity= res*bubbleSpeed;
+                collisionHandler.addCollider(ob->collider);
 }
 
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -96,6 +96,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE , LPSTR lpCmdLine, int iCmdSho
             TranslateMessage(&msg);
             DispatchMessage(&msg);
             }
+            collisionHandler.checkCollisions();
             gameHandler.updateObjects();
             render->render();
     }
@@ -120,8 +121,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     gameHandler.factory = &graphicFactory; 
                     gameHandler.mainRender = render;
                     gameHandler.addGameobject();
-                    gameHandler.addArrow();  
-                    playerArrow = &gameHandler.gameObjects.back();
+                    playerArrow = gameHandler.addArrow();  
+                    // this doesn't work becuase when the vector gets resized the position of playerArrow changes 
+                 
                 }
                 return 0;
             case WM_TIMER:
@@ -144,7 +146,17 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }                
                 return 0; 
             case WM_LBUTTONDOWN:
+                if(!bubbleShot)  
+                {
+                    std::cout << gameHandler.gameObjects.size() << std::endl;
                 shotBubble(); 
+                bubbleShot = true; 
+
+                    std::cout << gameHandler.gameObjects.size() << std::endl;
+                } 
+                return 0;
+        case WM_LBUTTONUP:
+                bubbleShot = false;
                 return 0;
             case WM_DESTROY:
                 running = false; 
