@@ -121,10 +121,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     gameHandler.factory = &graphicFactory; 
                     gameHandler.mainRender = render;
                     gameHandler.addGameobject();
-                    playerArrow = gameHandler.addArrow();  
-                    // this doesn't work becuase when the vector gets resized the position of playerArrow changes 
-                 
-                }
+                    playerArrow = gameHandler.addArrow();   
+                std::cout <<"Init Done" << std::endl;
+            }
                 return 0;
             case WM_TIMER:
                 return 0; 

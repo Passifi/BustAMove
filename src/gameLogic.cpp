@@ -29,7 +29,7 @@ bool RectCollisionShape::intersects(CollisionShape& other) {
    return result;
 }
 
-bool CircleCollisionShape::intersects(CollisionShape& other) {
+bool CircleCollisionShape::intersects([[maybe_unused]]CollisionShape& other) {
     auto dist = this->transform->position - other.transform->position;
     return this->radius+20.0f >= dist.magnitude();
 }
@@ -70,7 +70,6 @@ void Collisionhandler::checkCollisions() {
         for(auto cmp = it+1; cmp!= this->colliders.end(); cmp++)
         {
             if((*it)->collision(**cmp)) {
-                
             }
         }
 
@@ -80,6 +79,9 @@ GameObject* GameHandler::addGameobjectAt(Vector2D position) {
     std::unique_ptr<GameObject> obj = std::make_unique<GameObject>();
     obj->transform = new Transform2D(position,{20.f,20.f});
     obj->collider->shape = new RectCollisionShape();
+    
+    obj->collider->onCollision = []() { 
+    };
     GraphicProperties properties {
         0,0, 
         100.0,
@@ -90,13 +92,11 @@ GameObject* GameHandler::addGameobjectAt(Vector2D position) {
         obj->transform
     };
     obj->graphic = factory->createGraphic(SphereGrapic, properties);
+    obj->graphic->brush = this->mainRender->brushes[PurpleBrush]; 
     this->mainRender->addRenderObject(obj->graphic); 
     obj->collider->shape = new CircleCollisionShape(); 
-     
     obj->collider->shape->transform = obj->transform; 
-     
     this->gameObjects.push_back(std::move(obj));
-    // alerta! must be fixed because this position is bound to change when resizing the vector! 
     return this->gameObjects.back().get();
 }
 
@@ -106,6 +106,8 @@ GameObject* GameHandler::addArrow() {
     std::unique_ptr<GameObject> obj = std::make_unique<GameObject>();
     obj->transform = new Transform2D({600.0f,400.0f},{1.0f,1.0f});
     obj->transform->rotationPoint = {25.f,120.f};  
+
+    obj->collider->onCollision = []() {std::cout << "Collided" << std::endl;};
     GraphicProperties properties {
         0,0, 
         100.0,
@@ -129,6 +131,7 @@ void GameHandler::updateObjects() {
         if(el->collider->getCollisionStatus()) {
             static float x,y; 
             if(el->velocity.magnitude()  > 0) {
+                el->graphic->brush = mainRender->brushes.front();
                 x = el->transform->position.x;
                 y = el->transform->position.y;
                 x = floor(x/20.0f)*20.0f;   
@@ -144,10 +147,15 @@ void GameHandler::updateObjects() {
 
 }
 
+void collisionFunction() {
+    std::cout << "Collided" << std::endl;
+}
+
 void GameHandler::addGameobject(/*blueprint here*/) {
     std::unique_ptr<GameObject> obj = std::make_unique<GameObject>();
     obj->transform = new Transform2D({100.f,100.f},{20.f,20.f});  
     obj->collider->shape = new RectCollisionShape();
+    obj->collider->onCollision = []() {};
     GraphicProperties properties {
         0,
         0,
@@ -160,8 +168,10 @@ void GameHandler::addGameobject(/*blueprint here*/) {
     };
     try { 
     obj->graphic = factory->createGraphic(SphereGrapic, properties);
+    obj->graphic->brush = mainRender->brushes[OrangerBrush]; 
     this->mainRender->addRenderObject(obj->graphic); 
     this->gameObjects.push_back(std::move(obj));
+     
     if(this->collisionHandler != nullptr) {
         this->collisionHandler->addCollider(obj->collider);      
     }
@@ -177,7 +187,6 @@ void GameObject::applyVelocity() {
 }
 
 GameHandler::GameHandler() {
-    
 
 };
 

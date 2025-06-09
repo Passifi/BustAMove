@@ -88,15 +88,7 @@ Graphic* GraphicsFactory::createGraphic(GraphicType type,const GraphicProperties
     
         case SphereGrapic:
             {
-               ID2D1SolidColorBrush *brush;
-                    HRESULT hr = rTarget->CreateSolidColorBrush(properties.color,&brush); 
-                    if(!SUCCEEDED(hr)) {
-                    //maybe instead fallback on default brush, would depend on the type of error tho
-                    return nullptr;
-                }
-                
                 Graphic* g = new Circle(properties.transPtr);
-                g->brush = brush;
                 return g;
             }
         case Arrow:
@@ -152,8 +144,15 @@ void Renderer::drawGrid() {
 void Renderer::intialize() {
    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED,&factory);
     createGraphicsResources();
-}
 
+    this->addBrush(1.0f,0.2f ,0.1f );
+    this->addBrush(0.1f,0.8f ,0.3f );
+    this->addBrush(0.01f,0.3f ,0.9f );
+    this->addBrush(1.0f,0.1f ,0.9f );
+    this->addBrush(0.4f,0.4f ,0.4f );
+    this->addBrush(0.0f,0.9f ,0.8f );
+    this->addBrush(1.0f,0.9f ,0.4f );
+}
 
 ID2D1HwndRenderTarget* Renderer::getRenderTarget() {
 
@@ -192,6 +191,8 @@ void Renderer::updateDisplay() {
         );
         rTarget->Resize(size); 
 }
+
+
     
 void Renderer::render() {
     HRESULT hr = createGraphicsResources();
@@ -209,6 +210,16 @@ void Renderer::render() {
     rTarget->EndDraw();
 }
 
+void Renderer::addBrush(float red, float green, float blue) {
+
+    if(rTarget != nullptr) {
+        ID2D1SolidColorBrush *brush;         
+        this->rTarget->CreateSolidColorBrush(D2D1::ColorF(red,green,blue),&brush);
+        brushes.push_back(brush);
+    }
+
+}
+
 void Renderer::applyMatrices(Transform2D* transform) {
     this->rTarget->SetTransform(transform->getTransform());
 };
@@ -217,3 +228,6 @@ void Renderer::addRenderObject(Graphic* graphic) {
     graphics.push_back(graphic);
 
 }
+
+
+

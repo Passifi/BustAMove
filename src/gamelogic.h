@@ -21,29 +21,30 @@ class RectCollisionShape : public CollisionShape{
         RectCollisionShape(); 
         bool intersects(CollisionShape& other) override; 
 };
+
 class CircleCollisionShape : public CollisionShape {
     public:
         CircleCollisionShape();
         float radius = 20.0f;
         bool intersects(CollisionShape& other) override;
 };
+class GameObject;
 class Collider {
     
     public: 
-    CollisionShape* shape = nullptr;
-    bool collision(Collider& other);
-    bool getCollisionStatus();
-    void setCollisionStatus(bool newState);
-    void resetCollisionStatus();
-    std::function<void()> onCollision;
-private:
-    bool _hasCollided = false;
+        CollisionShape* shape = nullptr;
+        bool collision(Collider& other);
+        bool getCollisionStatus();
+        void setCollisionStatus(bool newState);
+        void resetCollisionStatus();
+        std::function<void()> onCollision;
+    private:
+        bool _hasCollided = false;
 };
 
 class Collisionhandler {
     public:
     std::vector<Collider*> colliders;
-
     void addCollider(Collider* c);
     void checkCollisions();
 };
@@ -62,11 +63,10 @@ class GameObject {
 };
 
 class Bubble : GameObject {
-public:
-    uint32_t color;
-    std::vector<Bubble*> connections;
-    Bubble(uint32_t colorC) : color(colorC) {
-    }
+    public:
+        uint32_t color;
+        std::vector<Bubble*> connections;
+        Bubble(uint32_t colorC) : color(colorC) {}
 };
 
 enum GameObjectType {
@@ -76,9 +76,9 @@ enum GameObjectType {
 };
 
 class GameObjectFactory {
-public:
-    GameObject createGameObject();
-    class::Arrow createArrow();
+    public:
+        GameObject createGameObject();
+        class::Arrow createArrow();
 };
 
 class GameHandler {

@@ -37,7 +37,7 @@ class Graphic {
          
         bool updateShape = false; 
         void updatePosition(Vector2D& newPosition); 
-        
+        void setColor(float red, float green, float blue); 
         void setColor(ID2D1Brush* brush);
         ID2D1Brush *brush;        
         Transform2D* transform; 
@@ -82,11 +82,26 @@ public:
     Graphic* createGraphic(GraphicType type,const GraphicProperties& properties);
 };
 
+enum BrushId { 
+    
+    RedBrush = 0,
+    GreenBrush = 1,
+    BlueBrush = 2,
+    PurpleBrush = 3,
+    SilverBrush= 4,
+    YellowBrush = 5,
+    OrangerBrush = 6,
+
+};
+
+
+
 class Renderer {
     public:
         Renderer(HWND hwnd);
         ~Renderer();
         RECT windowRect;
+        std::vector<ID2D1Brush*> brushes; 
         std::vector<Graphic*> graphics;
         PAINTSTRUCT ps; 
         DisplayInfo dispInfo; 
@@ -98,6 +113,7 @@ class Renderer {
         void addRenderObject(Graphic* graphics);
         void removeObject();
         void drawGrid(); 
+        void addBrush(float red,float green,float blue);
         ID2D1Factory* getFactory(); 
         ID2D1HwndRenderTarget* getRenderTarget(); 
         void applyMatrices(Transform2D* transform);   
