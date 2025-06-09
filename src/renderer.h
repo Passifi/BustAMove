@@ -20,6 +20,7 @@ struct DisplayInfo {
     int middle;
     int displayHeight;
     int displayWidth;
+
 };
 using D2D1::Point2F ;
 

@@ -12,7 +12,7 @@
 // define constants here 
 //
 //
-
+#define cellWidth 20
 Renderer::Renderer(HWND hwnd) : wHwnd(hwnd) {
             GetClientRect(hwnd,  &windowRect);
             calculateDisplayinfo(dispInfo,windowRect,20);
@@ -121,8 +121,7 @@ Graphic* GraphicsFactory::createGraphic(GraphicType type,const GraphicProperties
                          pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
                         hr = pSink->Close();
                     if(pSink != nullptr)
-                         free(pSink);
-                     
+                        pSink->Release();                   
                     class::Arrow * g = new class::Arrow(properties.transPtr);
                     g->brush = brush; 
                     g->shape = path; 
@@ -216,4 +215,5 @@ void Renderer::applyMatrices(Transform2D* transform) {
 
 void Renderer::addRenderObject(Graphic* graphic) {
     graphics.push_back(graphic);
+
 }

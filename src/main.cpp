@@ -91,12 +91,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE , LPSTR lpCmdLine, int iCmdSho
     }
     MSG msg;
     inputs.registerAction("A", setBubble);
+    gameHandler.collisionHandler = &collisionHandler; 
     while(running) { 
         while(PeekMessage(&msg, NULL,0,0,PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
             }
-            collisionHandler.checkCollisions();
             gameHandler.updateObjects();
             render->render();
     }
@@ -142,7 +142,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     auto arrowBase= Vector2D{600.0f,400.0f};
                     auto degTarget = arrowBase - position;
                     playerArrow->transform->setRotation(-atan2(degTarget.x,degTarget.y)*(180/PI));
-                    gameHandler.gameObjects[0].transform->setPosition( {(float)kx,(float)ky});
+                    gameHandler.gameObjects[0]->transform->setPosition( {(float)kx,(float)ky});
                 }                
                 return 0; 
             case WM_LBUTTONDOWN:
