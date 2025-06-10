@@ -7,8 +7,10 @@ class Vector2D  {
 public:
      float x, y;
      Vector2D(float x, float y) : x(x), y(y) {}
+     Vector2D(const Vector2D& oth) : x(oth.x), y(oth.y) {}     
      Vector2D operator+(Vector2D& other) {
-      return {this->x + other.x, this->y + other.y}; 
+        Vector2D vec(this->x + other.x, this->y + other.y); 
+        return vec; 
     }
      Vector2D operator-(Vector2D& other) {
         

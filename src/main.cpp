@@ -6,7 +6,6 @@
 #include <vector>
 #include <random>
 #include "shapes.h"
-//#include "gamelogic.h"
 #include <iostream>
 #include "renderer.h"
 #include "shapes.h"
@@ -38,7 +37,7 @@ Collisionhandler collisionHandler;
 Renderer *render = nullptr;
 Vector2D position(100.0f,100.0f);
 GraphicsFactory graphicFactory;
-GameObject *playerArrow = nullptr;
+Pointer *playerArrow = nullptr;
 void setBubble() {
 {
                int x = (int)(position.x / 20)*20;
@@ -59,8 +58,8 @@ void setBubble() {
 }
 
 void shotBubble() {
-                    float x = 600.0f;
-                    float y = 400.0f;
+                    float x = playerArrow->baseVec.x;
+                    float y = playerArrow->baseVec.y;
                    GraphicProperties props {
                     (float)x,
                     (float)y,
@@ -71,9 +70,8 @@ void shotBubble() {
                     D2D1::ColorF(0.3f,0.8f,0.2f)
 
                 };
-               auto ob=  gameHandler.addGameobjectAt( {(float)x,(float)y});         
-                auto base = Vector2D(600.f,400.f); 
-                auto res = position - base;
+                auto ob=  gameHandler.addGameobjectAt( {(float)x,(float)y});         
+                auto res = position - playerArrow->baseVec;
                 res.normalize();
                 ob->velocity= res*bubbleSpeed;
                 collisionHandler.addCollider(ob->collider);
@@ -121,8 +119,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     gameHandler.factory = &graphicFactory; 
                     gameHandler.mainRender = render;
                     gameHandler.addGameobject();
-                    playerArrow = gameHandler.addArrow();   
-                std::cout <<"Init Done" << std::endl;
+                    playerArrow = gameHandler.addArrow({float(windowRect.right - windowRect.left)/2,(float)windowRect.bottom-windowRect.top});   
             }
                 return 0;
             case WM_TIMER:
@@ -138,8 +135,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     int kx = lParam & 0xffff;
                     int ky = (0xffff0000 & lParam) >> 16;
                     position = {(float)kx,(float)ky};
-                    auto arrowBase= Vector2D{600.0f,400.0f};
-                    auto degTarget = arrowBase - position;
+                    auto degTarget = playerArrow->baseVec - position;
                     playerArrow->transform->setRotation(-atan2(degTarget.x,degTarget.y)*(180/PI));
                     gameHandler.gameObjects[0]->transform->setPosition( {(float)kx,(float)ky});
                 }                
@@ -164,6 +160,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
+
 int createWindow(HINSTANCE hInstance,LPSTR szAppName, int iCmdShow) {
     HWND hwnd;
     WNDCLASS wndclass;

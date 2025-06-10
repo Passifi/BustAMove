@@ -1,6 +1,7 @@
 #include <memory>
 #include <random>
 #include <vector>
+#include "gameMath.h"
 #include "renderer.h"
 #include "shapes.h"
 #include <unordered_set>
@@ -54,7 +55,7 @@ class GameObject {
         GameObject();
         GameObject(Vector2D pos);
         ~GameObject() {}         
-        Transform2D* transform;
+        Transform2D* transform = nullptr;
         Vector2D velocity{0.0f,0.0f}; // should be part of a physics class (like rigid body) for final engine,so don'lt couple to heavily  
         Graphic* graphic = nullptr;
         Collider* collider = new Collider();
@@ -67,6 +68,12 @@ class Bubble : GameObject {
         uint32_t color;
         std::vector<Bubble*> connections;
         Bubble(uint32_t colorC) : color(colorC) {}
+};
+
+class Pointer : public GameObject {
+    public: 
+        Pointer(Vector2D baseVec): baseVec(baseVec) , GameObject() {}
+        Vector2D baseVec;
 };
 
 enum GameObjectType {
@@ -90,6 +97,6 @@ class GameHandler {
         std::vector<std::unique_ptr<GameObject>> gameObjects; 
         void addGameobject(/*blueprint here*/);
         GameObject* addGameobjectAt(Vector2D position); 
-        GameObject* addArrow();  
+        Pointer* addArrow(Vector2D basePosition);  
         void updateObjects();
 };

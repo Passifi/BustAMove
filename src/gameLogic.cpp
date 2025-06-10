@@ -3,6 +3,7 @@
 #include <cmath>
 #include <d2d1helper.h>
 #include <memory>
+#include <sys/stat.h>
 
 void GameObject::move(Vector2D offset) {
     this->transform->position += offset;    
@@ -92,7 +93,8 @@ GameObject* GameHandler::addGameobjectAt(Vector2D position) {
         obj->transform
     };
     obj->graphic = factory->createGraphic(SphereGrapic, properties);
-    obj->graphic->brush = this->mainRender->brushes[PurpleBrush]; 
+    auto colorIndex = rand()%6; 
+    obj->graphic->brush = this->mainRender->brushes[colorIndex]; 
     this->mainRender->addRenderObject(obj->graphic); 
     obj->collider->shape = new CircleCollisionShape(); 
     obj->collider->shape->transform = obj->transform; 
@@ -101,12 +103,11 @@ GameObject* GameHandler::addGameobjectAt(Vector2D position) {
 }
 
 
-GameObject* GameHandler::addArrow() {
 
-    std::unique_ptr<GameObject> obj = std::make_unique<GameObject>();
-    obj->transform = new Transform2D({600.0f,400.0f},{1.0f,1.0f});
-    obj->transform->rotationPoint = {25.f,120.f};  
-
+Pointer* GameHandler::addArrow(Vector2D position) {
+    std::unique_ptr<Pointer> obj = std::make_unique<Pointer>(position);
+    obj->transform = new Transform2D({position.x,position.y-120.0f},{1.0f,1.0f});
+    obj->transform->rotationPoint = {0.f,120.f};  
     obj->collider->onCollision = []() {std::cout << "Collided" << std::endl;};
     GraphicProperties properties {
         0,0, 
@@ -120,9 +121,8 @@ GameObject* GameHandler::addArrow() {
     obj->graphic = factory->createGraphic( Arrow, properties); 
     this->mainRender->addRenderObject(obj->graphic); 
     this->gameObjects.push_back(std::move(obj));
-    return this->gameObjects.back().get();
+    return static_cast<Pointer*>(this->gameObjects.back().get());
 }
-
 void GameHandler::updateObjects() {
     collisionHandler->checkCollisions(); 
     
