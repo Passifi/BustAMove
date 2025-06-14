@@ -115,7 +115,9 @@ void Bubble::connectTo(Bubble* other) {
 }
 
 GameObject* GameHandler::addGameobjectAt(Vector2D position) {
-    std::unique_ptr<Bubble> obj = std::make_unique<Bubble>(0xff0000);
+
+    auto colorIndex = rand()%6; 
+    std::unique_ptr<Bubble> obj = std::make_unique<Bubble>(colorIndex);
     obj->transform = new Transform2D(position,{20.f,20.f});
     obj->collider->shape = new RectCollisionShape();
     obj->collider->onCollision = []() { 
@@ -130,7 +132,6 @@ GameObject* GameHandler::addGameobjectAt(Vector2D position) {
         obj->transform
     };
     obj->graphic = factory->createGraphic(SphereGrapic, properties);
-    auto colorIndex = rand()%6; 
     obj->graphic->brush = this->mainRender->brushes[colorIndex]; 
     this->mainRender->addRenderObject(obj->graphic); 
     obj->collider->shape = new CircleCollisionShape(); 

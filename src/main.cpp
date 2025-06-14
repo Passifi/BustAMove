@@ -14,13 +14,7 @@
 #include "gamelogic.h"
 #include "transform.h"
 #define PI 3.14159265358979323846
-RECT windowRect;
-const int playfieldWidth = 10;
-const int playfieldMaxHeight = 30;
-const float bubbleSpeed = 4.0f;
-DisplayInfo dispInfo;
-bool bubbleShot = false;
-    bool running = true;
+
 std::vector<std::uint32_t> colors {
     0xee0110,
     0x00ea00,
@@ -32,6 +26,15 @@ std::vector<std::uint32_t> colors {
     0x00ea0a,
 };
 
+
+
+RECT windowRect;
+const int playfieldWidth = 10;
+const int playfieldMaxHeight = 30;
+const float bubbleSpeed = 4.0f;
+DisplayInfo dispInfo;
+bool bubbleShot = false;
+    bool running = true;
 GameHandler gameHandler;
 Collisionhandler collisionHandler;
 Renderer *render = nullptr;
