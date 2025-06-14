@@ -27,6 +27,9 @@ Renderer::~Renderer() {
     }
 }
 
+        void Graphic::release() {
+        this->toRemove = true;
+}
 
 void initGraphicProperties(GraphicProperties& properties) {
     properties.x = 0;
@@ -199,14 +202,17 @@ void Renderer::render() {
     if(!SUCCEEDED(hr)) {
         return;
     }
-    rTarget->BeginDraw();
-    rTarget->Clear(D2D1::ColorF(D2D1::ColorF::WhiteSmoke)); 
-    drawGrid();
+        rTarget->BeginDraw();
+        rTarget->Clear(D2D1::ColorF(D2D1::ColorF::WhiteSmoke)); 
+        drawGrid();
     for(auto& el : graphics) {
+        if(el->toRemove || el == nullptr || el->transform == nullptr) continue;       
+        
         applyMatrices(el->transform);
         el->draw(rTarget);
         rTarget->SetTransform(D2D1::Matrix3x2F::Identity());
     }
+
     rTarget->EndDraw();
 }
 

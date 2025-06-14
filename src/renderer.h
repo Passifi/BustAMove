@@ -39,9 +39,11 @@ class Graphic {
         void updatePosition(Vector2D& newPosition); 
         void setColor(float red, float green, float blue); 
         void setColor(ID2D1Brush* brush);
+        void release();
         ID2D1Brush *brush;        
         Transform2D* transform; 
         bool filled = true;
+        bool toRemove = false;
 };
 
 class Circle :public Graphic {

@@ -60,7 +60,7 @@ void setBubble() {
 void shotBubble() {
                     float x = playerArrow->baseVec.x;
                     float y = playerArrow->baseVec.y;
-                   GraphicProperties props {
+                    GraphicProperties props {
                     (float)x,
                     (float)y,
                     20,
@@ -69,7 +69,7 @@ void shotBubble() {
                     false,
                     D2D1::ColorF(0.3f,0.8f,0.2f)
 
-                };
+                    };
                 auto ob=  gameHandler.addGameobjectAt( {(float)x,(float)y});         
                 auto res = position - playerArrow->baseVec;
                 res.normalize();
@@ -120,7 +120,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     gameHandler.mainRender = render;
                     gameHandler.addGameobject();
                     playerArrow = gameHandler.addArrow({float(windowRect.right - windowRect.left)/2,(float)windowRect.bottom-windowRect.top});   
-            }
+               }
                 return 0;
             case WM_TIMER:
                 return 0; 
@@ -183,6 +183,3 @@ int createWindow(HINSTANCE hInstance,LPSTR szAppName, int iCmdShow) {
     UpdateWindow(hwnd);
     return 0;
 }
-
-
-

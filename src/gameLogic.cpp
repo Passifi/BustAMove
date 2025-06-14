@@ -4,7 +4,7 @@
 #include <d2d1helper.h>
 #include <memory>
 #include <sys/stat.h>
-
+#include <algorithm>
 void GameObject::move(Vector2D offset) {
     this->transform->position += offset;    
     }
@@ -25,7 +25,6 @@ GameObject::GameObject(Vector2D pos) {
 }
 
 bool RectCollisionShape::intersects(CollisionShape& other) {
-        
     bool result = false;
    return result;
 }
@@ -35,29 +34,62 @@ bool CircleCollisionShape::intersects([[maybe_unused]]CollisionShape& other) {
     return this->radius+20.0f >= dist.magnitude();
 }
 
+void Collider::release() {
+        this->toRemove = true;
+}
+void checkConnections(Bubble* root) {
+    std::unordered_set<Bubble*> visited;
+    std::queue<Bubble*> toVisit;
+    toVisit.push(root); 
+    for(auto&el : root->connections) {
+        if(root->color == el->color) // only visit nodes which have the same colora 
+        toVisit.push(el); 
+    }
+    
+    while(toVisit.size() > 0) {
+        auto current = toVisit.front();
+        toVisit.pop();
+        if(current != nullptr) {
+            visited.insert(current); 
+        }
+        else 
+            continue;
+        for(auto&el : current->connections) {
+            
+            if(visited.count(el) > 0) 
+                continue; // don't visit nodes twice
+
+            if(current->color == el->color) 
+                toVisit.push(el);
+        }
+    }
+    if(visited.size() > 2) {
+        for(auto& el : visited) {
+            el->toRemove = true;
+        }
+    }
+};
+
 bool Collider::collision(Collider& collider) {
     
     bool collided = collider.shape->intersects(*this->shape); 
     if(collided) {
         collider.setCollisionStatus(true);
+        this->collidedWith.push_back(&collider); 
     }
     this->_hasCollided = this->_hasCollided || collided;
-    //should there be a list of objects this collided with? 
     return collided;
-
 }
 
 void Collider::setCollisionStatus(bool newStat) {
-this->_hasCollided = newStat; 
+    this->_hasCollided = newStat; 
 }
-
 
 bool Collider::getCollisionStatus() {
     return this->_hasCollided;
 }
 
 void Collider::resetCollisionStatus() {
-
     this->_hasCollided = false;
 }
 
@@ -70,17 +102,22 @@ void Collisionhandler::checkCollisions() {
     for(auto it = this->colliders.begin(); it != this->colliders.end(); it++) {
         for(auto cmp = it+1; cmp!= this->colliders.end(); cmp++)
         {
-            if((*it)->collision(**cmp)) {
+            if(*it == nullptr || (*it)->toRemove) continue;
+             if((*it)->collision(**cmp)) {
             }
         }
 
     };
 }
+
+void Bubble::connectTo(Bubble* other) {
+    this->connections.push_back(other);
+}
+
 GameObject* GameHandler::addGameobjectAt(Vector2D position) {
-    std::unique_ptr<GameObject> obj = std::make_unique<GameObject>();
+    std::unique_ptr<Bubble> obj = std::make_unique<Bubble>(0xff0000);
     obj->transform = new Transform2D(position,{20.f,20.f});
     obj->collider->shape = new RectCollisionShape();
-    
     obj->collider->onCollision = []() { 
     };
     GraphicProperties properties {
@@ -122,13 +159,35 @@ Pointer* GameHandler::addArrow(Vector2D position) {
     this->mainRender->addRenderObject(obj->graphic); 
     this->gameObjects.push_back(std::move(obj));
     return static_cast<Pointer*>(this->gameObjects.back().get());
+
 }
+
+GameObject* GameHandler::getObjectFromCollider(Collider* c) {
+
+    for(auto& g:this->gameObjects) {
+        if(g->collider == c) 
+            return g.get();
+    }
+    return nullptr;
+}
+
 void GameHandler::updateObjects() {
     collisionHandler->checkCollisions(); 
     
     for(auto& el : gameObjects) {
         
         if(el->collider->getCollisionStatus()) {
+            if(el->type == "Bubble") {
+            for(auto& c : el->collider->collidedWith) {
+                 auto connectTo = this->getObjectFromCollider(c);
+                if(connectTo != nullptr && connectTo->type == "Bubble") 
+                {
+                        auto b = static_cast<Bubble*>(el.get());
+                        b->connectTo(static_cast<Bubble*>(connectTo)); 
+                        
+                }
+            }
+            }
             static float x,y; 
             if(el->velocity.magnitude()  > 0) {
                 el->graphic->brush = mainRender->brushes.front();
@@ -143,8 +202,19 @@ void GameHandler::updateObjects() {
             el->collider->resetCollisionStatus();
         }
         el->applyVelocity();
+        if(el->type == "Bubble") {
+            
+            auto cBubble = static_cast<Bubble*>(el.get());
+            checkConnections(cBubble);  
+        }
     }
+    auto new_end = std::remove_if(gameObjects.begin(),gameObjects.end(),
+                                  [](const std::unique_ptr<GameObject>& b_ptr) {
+                                        
+                                    return b_ptr && b_ptr->toRemove;
 
+                                  });
+    gameObjects.erase(new_end,gameObjects.end());
 }
 
 void collisionFunction() {
